@@ -3,5 +3,14 @@
 version = 4
 
 [[package]]
+name = "easy-tree"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "43f560da9bebb976828efaccac969205c68852b12cf9f88d3a4a6bcd8f7fca34"
+
+[[package]]
 name = "huffman-text-zip"
 version = "0.1.0"
+dependencies = [
+ "easy-tree",
+]
