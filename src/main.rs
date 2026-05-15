@@ -28,15 +28,28 @@ fn count_freq(text: &str) -> FreqMap {
 // Строит двоичное дерево, листьями которого являются конкретные символы.
 // По этому дереву можно будет построить уникальный префикс для любого символа.
 fn build_tree(freq: &FreqMap) -> Tree<CharWeight> {
+    if freq.is_empty() {
+        return Tree::new();
+    }
+
     let mut node_list: Vec<(&char, &u32)> = freq.into_iter().collect();
     node_list.sort_by_key(|x| Reverse(x.1));
 
     let mut tree = Tree::new();
-    let mut sub_tree = tree.add_node((0, None));
+    let mut rest_weight: u32 = node_list.iter().map(|x| x.1).sum();
+    let last_node = node_list.pop();
+    let mut sub_tree = tree.add_node((rest_weight, None));
     for (ch, cnt) in node_list {
         tree.add_child(sub_tree, (*cnt, Some(*ch)));
-        sub_tree = tree.add_child(sub_tree, (0, None));
-    }
+        rest_weight -= *cnt;
+        if rest_weight != 0 {
+            sub_tree = tree.add_child(sub_tree, (rest_weight, None));
+        }
+    };
+
+    if let Some(x) = last_node {
+        tree.add_child(sub_tree, (*x.1, Some(*x.0)));
+    };
 
     tree
 }
