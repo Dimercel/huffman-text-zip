@@ -5,7 +5,7 @@ use easy_tree::Tree;
 
 type FreqMap = HashMap<char, u32>;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum Bit {One, Zero}
 
 type Code = Vec<Bit>;
@@ -25,8 +25,8 @@ fn count_freq(text: &str) -> FreqMap {
     res
 }
 
-// Строит двоичное дерево, листьями которого являются конкретные символы.
-// По этому дереву можно будет построить уникальный префикс для любого символа.
+/// Строит двоичное дерево, листьями которого являются конкретные символы.
+/// По этому дереву можно будет построить словарь уникальных префиксов для всех символов
 fn build_tree(freq: &FreqMap) -> Tree<CharWeight> {
     if freq.is_empty() {
         return Tree::new();
@@ -54,6 +54,52 @@ fn build_tree(freq: &FreqMap) -> Tree<CharWeight> {
     tree
 }
 
+/// Выстраивает уникальный двоичный идентификатор для каждого символа в дереве
+fn build_codes(prefix_tree: &Tree<CharWeight>) -> CodeMap {
+    let mut node = 0;
+    let mut code: Code = Vec::new();
+    let mut codes_map = CodeMap::new();
+
+    loop {
+        let pair = prefix_tree.children(node);
+        println!("{:?}", pair);
+        let left_node = prefix_tree.get(pair[0]).unwrap();
+        let right_node = prefix_tree.get(pair[1]).unwrap();
+
+        match left_node {
+            (_, Some(x)) => {
+                let mut full_code = code.clone();
+                full_code.push(Bit::One);
+                codes_map.insert(*x, full_code);
+            },
+            _ => {node = pair[0]; }
+        };
+
+        match right_node {
+            (_, Some(x)) => {
+                let mut full_code = code.clone();
+                full_code.push(Bit::Zero);
+                codes_map.insert(*x, full_code);
+            },
+            _ => {node = pair[1]; }
+        };
+
+        if left_node.1.is_some() {
+            code.push(Bit::One)
+        } else {
+            code.push(Bit::Zero)
+        };
+
+
+        if node != pair[0] && node != pair[1] {
+            break;
+        }
+
+    }
+
+    codes_map
+}
+
 
 fn main() {
     println!("Hello, world!");
@@ -68,4 +114,6 @@ fn main() {
     for (idx, data) in prefix_tree.iter_mut() {
         println!("{:?}", (idx, data));
     };
+
+    let codes = build_codes(&prefix_tree);
 }
