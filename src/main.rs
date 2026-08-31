@@ -61,37 +61,45 @@ fn build_codes(prefix_tree: &Tree<CharWeight>) -> CodeMap {
     let mut codes_map = CodeMap::new();
 
     loop {
+
         let pair = prefix_tree.children(node);
-        println!("{:?}", pair);
-        let left_node = prefix_tree.get(pair[0]).unwrap();
-        let right_node = prefix_tree.get(pair[1]).unwrap();
+        let mut left_node: Option<CharWeight> = None;
+        let mut right_node: Option<CharWeight> = None;
+
+        match (pair.get(0), pair.get(1)) {
+            (Some(inx1), Some(inx2)) => {
+                left_node = Some(*prefix_tree.get(*inx1).unwrap());
+                right_node = Some(*prefix_tree.get(*inx2).unwrap());
+            },
+            (Some(inx), _) => {left_node = Some(*prefix_tree.get(*inx).unwrap())},
+            (_, Some(inx)) => {right_node = Some(*prefix_tree.get(*inx).unwrap())},
+            _ => {}
+        };
 
         match left_node {
-            (_, Some(x)) => {
+            Some((_, Some(ch))) => {
                 let mut full_code = code.clone();
                 full_code.push(Bit::One);
-                codes_map.insert(*x, full_code);
+                codes_map.insert(ch, full_code);
+
+                code.push(Bit::Zero);
             },
-            _ => {node = pair[0]; }
+            Some((_, None)) => {node = pair[0]},
+            _ => {}
         };
 
         match right_node {
-            (_, Some(x)) => {
-                let mut full_code = code.clone();
-                full_code.push(Bit::Zero);
-                codes_map.insert(*x, full_code);
+            Some((_, Some(ch))) => {
+                code.push(Bit::Zero);
+                codes_map.insert(ch, code.clone());
+
+                code.push(Bit::Zero);
             },
-            _ => {node = pair[1]; }
+            Some((_, None)) => {node = pair[1]; },
+            _ => {}
         };
 
-        if left_node.1.is_some() {
-            code.push(Bit::One)
-        } else {
-            code.push(Bit::Zero)
-        };
-
-
-        if node != pair[0] && node != pair[1] {
+        if !pair.contains(&node) {
             break;
         }
 
@@ -102,18 +110,17 @@ fn build_codes(prefix_tree: &Tree<CharWeight>) -> CodeMap {
 
 
 fn main() {
-    println!("Hello, world!");
-    println!("{:?}", Bit::One);
     println!("{:?}", count_freq("aaabbc"));
     let mut freq_list: Vec<(char, u32)> = count_freq("aaabbcdddd").into_iter().collect();
     freq_list.sort_by_key(|x| x.1);
 
     println!("{:?}", freq_list);
-    let mut prefix_tree = build_tree(&count_freq("aaabbc"));
+    let mut prefix_tree = build_tree(&count_freq("aaaabbc"));
 
     for (idx, data) in prefix_tree.iter_mut() {
         println!("{:?}", (idx, data));
     };
 
     let codes = build_codes(&prefix_tree);
+    println!("{:?}", codes);
 }
