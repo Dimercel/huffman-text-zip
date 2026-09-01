@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::cmp::Reverse;
+use std::env;
 
 use easy_tree::Tree;
 
@@ -12,6 +13,10 @@ type Code = Vec<Bit>;
 type CodeMap = HashMap<char, Code>;
 type CharWeight = (u32, Option<char>);
 
+
+fn display_code(code: &Code) -> String {
+    code.into_iter().map(|x| match x {Bit::Zero => '0', Bit::One => '1'}).collect()
+}
 
 /// Подсчитывает кол-во вхождений каждого уникального
 /// символа в строке и возвращает значение
@@ -110,17 +115,23 @@ fn build_codes(prefix_tree: &Tree<CharWeight>) -> CodeMap {
 
 
 fn main() {
-    println!("{:?}", count_freq("aaabbc"));
-    let mut freq_list: Vec<(char, u32)> = count_freq("aaabbcdddd").into_iter().collect();
-    freq_list.sort_by_key(|x| x.1);
+    let args: Vec<String> = env::args().collect();
 
-    println!("{:?}", freq_list);
-    let mut prefix_tree = build_tree(&count_freq("aaaabbc"));
+    let text = &args[1];
+    println!("Original: \"{}\"", text);
+    println!("Original size: {} bytes", text.len());
 
-    for (idx, data) in prefix_tree.iter_mut() {
-        println!("{:?}", (idx, data));
-    };
-
+    let prefix_tree = build_tree(&count_freq(text));
     let codes = build_codes(&prefix_tree);
-    println!("{:?}", codes);
+    let mut encoded: Code = vec![];
+
+    for ch in text.chars() {
+        match codes.get(&ch) {
+            Some(bits) => encoded.extend_from_slice(bits),
+            _ => {}
+        };
+    }
+
+    println!("Encoded size: {} bytes", encoded.len() / 8);
+    println!("Encoded: \"{}\"", display_code(&encoded));
 }
